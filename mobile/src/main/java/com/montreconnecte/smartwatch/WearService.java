@@ -57,23 +57,23 @@ public class WearService extends WearableListenerService {
                 .addApi(Wearable.API)
                 .build();
         mApiClient.connect();
+        Log.e("LOG create", "create");
         receiver=new BroadcastReceiver(){
             @Override
             public void onReceive(Context context, Intent intent) {
 
-                final AudioManager amanager=(AudioManager)getSystemService(Context.AUDIO_SERVICE);
+                if(!isInitialStickyBroadcast()) {
+                    final AudioManager amanager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
 
-                if (amanager.getRingerMode() == AudioManager.RINGER_MODE_VIBRATE) {
-                    sendMessage("vib", "vibrator");
-                    Log.e("LOG envoi", "vib - vibrator");
+                    if (amanager.getRingerMode() == AudioManager.RINGER_MODE_VIBRATE) {
+                        sendMessage("vib", "vibrator");
 
-                } else if (amanager.getRingerMode() == AudioManager.RINGER_MODE_NORMAL){
-                    sendMessage("vib", "ringing");
-                    Log.e("LOG envoi", "vib - ringing");
-                } else {
+                    } else if (amanager.getRingerMode() == AudioManager.RINGER_MODE_NORMAL) {
+                        sendMessage("vib", "ringing");
+                    } else if (amanager.getRingerMode() == AudioManager.RINGER_MODE_SILENT) {
 
-                    sendMessage("vib", "silent");
-                    Log.e("LOG envoi", "vib - silent");
+                        sendMessage("vib", "silent");
+                    }
                 }
             }
         };
@@ -102,9 +102,7 @@ public class WearService extends WearableListenerService {
                 //envoie le message à tous les noeuds/montres connectées
                 final NodeApi.GetConnectedNodesResult nodes = Wearable.NodeApi.getConnectedNodes(mApiClient).await();
 
-                Log.e(TAG, "Nodes : "+nodes.getNodes().toString());
-
-                for (Node node : nodes.getNodes()) {  // nodes est vide ??!! Par quelle sorcellerie?
+                for (Node node : nodes.getNodes()) {
                     Log.e(TAG, "SendMessageTriggered");
                     Wearable.MessageApi.sendMessage(mApiClient, node.getId(), path, message.getBytes()).await();
 
@@ -177,7 +175,7 @@ public class WearService extends WearableListenerService {
             Log.e(TAG, "Failed to connect to GoogleApiClient.");
             return;
         }
-        sendMessage("vib", "silent");
+        //sendMessage("vib", "silent");
 
         //traite le message reçu
         final String path = messageEvent.getPath();
@@ -198,19 +196,11 @@ public class WearService extends WearableListenerService {
 
             if (amanager.getRingerMode() == AudioManager.RINGER_MODE_VIBRATE) {
                 amanager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
-                //sendMessage("vib", "silent");
-                Log.e("LOG envoi", "vib - silent");
-
             } else if (amanager.getRingerMode() == AudioManager.RINGER_MODE_NORMAL){
                 amanager.setRingerMode(AudioManager.RINGER_MODE_VIBRATE);
-                //sendMessage("vib", "vibrator");
-                Log.e("LOG envoi", "vib - vibrator");
-            } else {
+            } else if (amanager.getRingerMode() == AudioManager.RINGER_MODE_SILENT) {
                 amanager.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
-               // sendMessage("vib", "ringing");
-                Log.e("LOG envoi", "vib - ringing");
             }
-
 
             mHandler.post(new Runnable() {
                 @Override
