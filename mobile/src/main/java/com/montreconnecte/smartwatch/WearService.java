@@ -67,11 +67,9 @@ public class WearService extends WearableListenerService {
 
                     if (amanager.getRingerMode() == AudioManager.RINGER_MODE_VIBRATE) {
                         sendMessage("vib", "vibrator");
-
                     } else if (amanager.getRingerMode() == AudioManager.RINGER_MODE_NORMAL) {
                         sendMessage("vib", "ringing");
                     } else if (amanager.getRingerMode() == AudioManager.RINGER_MODE_SILENT) {
-
                         sendMessage("vib", "silent");
                     }
                 }
@@ -110,6 +108,7 @@ public class WearService extends WearableListenerService {
             }
         }).start();
     }
+
 
     /**
      * Permet d'envoyer une image à la montre
@@ -217,9 +216,9 @@ public class WearService extends WearableListenerService {
             if (amanager.getRingerMode() == AudioManager.RINGER_MODE_VIBRATE) {
                 sendMessage("vib","vibrator");
             } else if (amanager.getRingerMode() == AudioManager.RINGER_MODE_NORMAL){
-                sendMessage("vib", "silent");
+                sendMessage("vib", "ringing");
             } else {
-                sendMessage("vib","ringing");
+                sendMessage("vib","silent");
             }
 
             mHandler.post(new Runnable() {
