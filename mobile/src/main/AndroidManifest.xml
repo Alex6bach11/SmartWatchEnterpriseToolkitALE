@@ -24,13 +24,9 @@
         <service android:name=".WearService" >
             <intent-filter>
                 <action android:name="com.google.android.gms.wearable.BIND_LISTENER" />
-            </intent-filter>
-        </service>
-      <!--  <receiver android:name=".VibrateBroadCastReceiver" >
-            <intent-filter>
                 <action android:name="android.media.RINGER_MODE_CHANGED"  />
             </intent-filter>
-        </receiver> -->
+        </service>
     </application>
 
 </manifest>
