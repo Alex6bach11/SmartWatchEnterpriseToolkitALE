@@ -80,6 +80,26 @@ private List<ListViewItem> viewItemList = new ArrayList<>();
         //envoie le premier message
         sendMessage("getMode", "");
 
+        Thread thread = new Thread() {
+            @Override
+            public void run() {
+                while (true) {
+                    try {
+                        synchronized (this) {
+                            wait(3000);
+                        }
+                    } catch (InterruptedException ex) {
+                    }
+
+                    sendMessage("getMode", "");
+                    Log.e("LOG RUN", "RUN");
+
+                }
+            }
+        };
+
+        thread.start();
+        
     }
 
     @Override

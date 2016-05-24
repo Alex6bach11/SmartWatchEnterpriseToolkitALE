@@ -24,7 +24,7 @@ public class VibrateBroadCastReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
 
-
+/*
 
         mApiClient = new GoogleApiClient.Builder(this)
                 .addApi(Wearable.API)
@@ -45,7 +45,7 @@ public class VibrateBroadCastReceiver extends BroadcastReceiver {
             sendMessage("vib", "silent");
             Log.e("LOG envoi", "vib - silent");
         }
-        mApiClient.disconnect();
+        mApiClient.disconnect();*/
     }
 
     /**

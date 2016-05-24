@@ -9,6 +9,9 @@ import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Looper;
+import android.os.Message;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -49,6 +52,25 @@ public class WearService extends WearableListenerService {
     private BroadcastReceiver receiver;
     private IntentFilter filter;
 
+    private volatile HandlerThread mHandlerThread;
+    private ServiceHandler mServiceHandler;
+
+    // Define how the handler will process messages
+    private final class ServiceHandler extends Handler {
+        public ServiceHandler(Looper looper) {
+            super(looper);
+        }
+
+        // Define how to handle any incoming messages here
+        @Override
+        public void handleMessage(Message message) {
+            // ...
+            // When needed, stop the service with
+            // stopSelf();
+        }
+    }
+
+
     @Override
     public void onCreate() {
         //m_instance=this;
@@ -78,6 +100,7 @@ public class WearService extends WearableListenerService {
         filter=new IntentFilter(
                 AudioManager.RINGER_MODE_CHANGED_ACTION);
         registerReceiver(receiver, filter);
+
     }
 
     @Override
@@ -221,12 +244,6 @@ public class WearService extends WearableListenerService {
                 sendMessage("vib","silent");
             }
 
-            mHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(getApplicationContext(), "xX!GETMODE!Xx", Toast.LENGTH_SHORT).show();
-                }
-            });
         }
         else if (path.equals("lien")){
             this.ouvrirLien(new String(bytes, StandardCharsets.UTF_8));
