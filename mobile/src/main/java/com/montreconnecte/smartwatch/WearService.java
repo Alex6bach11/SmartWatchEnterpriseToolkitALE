@@ -224,13 +224,6 @@ public class WearService extends WearableListenerService {
                 amanager.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
             }
 
-            mHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(getApplicationContext(), "Mode : "+amanager.getRingerMode(), Toast.LENGTH_SHORT).show();
-                }
-            });
-
         } else if(path.equals("getMode")){
             Handler mHandler = new Handler(getMainLooper());
             Log.e("LOG envoi Mobile", "getMode : démarrage");
