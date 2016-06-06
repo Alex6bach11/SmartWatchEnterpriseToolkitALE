@@ -1,8 +1,6 @@
 package com.montreconnecte.smartwatch;
 
 import android.app.Activity;
-import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.wearable.view.WearableListView;
 import android.util.Log;
@@ -21,6 +19,9 @@ import com.google.android.gms.wearable.Wearable;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Classe principale gérant l'affichage sur la montre et les déclenchements d'interfaec
+ */
 public class MainActivity extends Activity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, MessageApi.MessageListener, WearableListView.ClickListener{
 
 private List<ListViewItem> viewItemList = new ArrayList<>();
@@ -32,6 +33,10 @@ private List<ListViewItem> viewItemList = new ArrayList<>();
         setContentView(R.layout.activity_main);
     }
 
+    /**
+     * gère la liste des liens en favoris sur la montre et leurs affichage
+     * @param v vue d'affichage
+     */
     public void afficheFavori(View v) {
         setContentView(R.layout.main_list_activity);
 
@@ -61,32 +66,41 @@ private List<ListViewItem> viewItemList = new ArrayList<>();
         mApiClient.connect();
     }
 
+    /**
+     * Permet de gérer les suspensions de connexions
+     * @param i
+     */
     @Override
     public void onConnectionSuspended(int i) {
     }
 
+    /**
+     * Permet de gérer les échecs de connexions
+     * @param connectionResult
+     */
     @Override
     public void onConnectionFailed(ConnectionResult connectionResult) {
     }
 
     /**
-     * Appellé à la réception d'un message envoyé depuis le vibrator
+     * Appellé lors de la connexions de la montre au mobile, au démarrage des deux applications
+     * @param bundle
      */
     @Override
     public void onConnected(Bundle bundle) {
         Wearable.MessageApi.addListener(mApiClient, this);
-        //Wearable.DataApi.addListener(mApiClient, this);
 
-        //envoie le premier message
+        //Envoie le premier message pour obtenir le mode de sonnerie courant
         sendMessage("getMode", "");
 
+        //Démarre un thread qui sera chargé de maintenir à jour l'affichage du mode de sonnerie du mobile sur la montre
         Thread thread = new Thread() {
             @Override
             public void run() {
                 while (true) {
                     try {
                         synchronized (this) {
-                            wait(3000);
+                            wait(3000); // Boucle de 3s
                         }
                     } catch (InterruptedException ex) {
                     }
@@ -102,19 +116,25 @@ private List<ListViewItem> viewItemList = new ArrayList<>();
         
     }
 
+    /**
+     * Gère l'arret de connexions entre les deux appareils
+     */
     @Override
     protected void onStop() {
         if (null != mApiClient && mApiClient.isConnected()) {
             Wearable.MessageApi.removeListener(mApiClient, this);
-            //Wearable.DataApi.removeListener(mApiClient, this);
             mApiClient.disconnect();
         }
         super.onStop();
     }
 
+    /**
+     * Fonction déclenchée lors de la récéption d'un message en provenance du mobile
+     * @param messageEvent
+     */
     @Override
     public void onMessageReceived(MessageEvent messageEvent) {
-        //traite le message reçu
+
         final String path = messageEvent.getPath();
         final String message = new String(messageEvent.getData());
 
@@ -126,9 +146,9 @@ private List<ListViewItem> viewItemList = new ArrayList<>();
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    //Toast.makeText(MainActivity.this, "vib ", Toast.LENGTH_SHORT).show();
                     ImageButton b = (ImageButton) findViewById(R.id.imageButton2);
                     if (b != null) {
+                        //Mise à jour de l'icone du bouton
                         if (message.equals("silent")) {
                             b.setImageResource(R.mipmap.mute);
                         } else if (message.equals("vibrator")) {
@@ -140,27 +160,10 @@ private List<ListViewItem> viewItemList = new ArrayList<>();
                 }
             });
         }
-        /*if(path.equals("bonjour")){
-
-            //récupère le contenu du message
-            final String message = new String(messageEvent.getData());
-
-
-            //penser à effectuer les actions graphiques dans le UIThread
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    //nous affichons ici dans notre viewpager
-                    elementList = new ArrayList<>();
-                    elementList.add(new Element("Message reçu", message, "#F44336"));
-                    pager.setAdapter(new ElementGridPagerAdapter(elementList, getFragmentManager()));
-                }
-            });
-        }*/
     }
 
     /**
-     * Envoie un message à au vibrator
+     * Gère l'envoi de message depuis la montre vers le mobile
      * @param path identifiant du message
      * @param message message à transmettre
      */
@@ -180,105 +183,18 @@ private List<ListViewItem> viewItemList = new ArrayList<>();
         }).start();
     }
 
+    /**
+     * Déclenche l'envoi d'un message provoquant le changement de mode de sonnerie au téléphone lors du click sur le bouton de changement de mode de sonnerie
+     * @param view
+     */
     public void buttonClick(View view){
         sendMessage("vib", "SWITCH");
     }
 
-    /*@Override
-    public void onDataChanged(DataEventBuffer dataEvents) {
-
-        for (DataEvent event : dataEvents) {
-            //on attend ici des assets dont le path commence par /image/
-            if (event.getType() == DataEvent.TYPE_CHANGED && event.getDataItem().getUri().getPath().startsWith("/image/")) {
-
-                DataMapItem dataMapItem = DataMapItem.fromDataItem(event.getDataItem());
-                Asset profileAsset = dataMapItem.getDataMap().getAsset("image");
-                Bitmap bitmap = loadBitmapFromAsset(profileAsset);
-                // On peux maintenant utiliser notre bitmap
-            }
-        }
-    }*/
-
-    /*@Override
-    public void onDataChanged(DataEventBuffer dataEvents) {
-        //appellé lorsqu'une donnée à été mise à jour, nous utiliserons une autre méthode
-
-        for (DataEvent event : dataEvents) {
-            //on attend les "elements"
-            if (event.getType() == DataEvent.TYPE_CHANGED && event.getDataItem().getUri().getPath().startsWith("/elements/")) {
-                DataMapItem dataMapItem = DataMapItem.fromDataItem(event.getDataItem());
-                List<DataMap> elementsDataMap = dataMapItem.getDataMap().getDataMapArrayList("/list/");
-
-                if (elementList == null || elementList.isEmpty()) {
-                    elementList = new ArrayList<>();
-
-                    for (DataMap dataMap : elementsDataMap) {
-                        elementList.add(getElement(dataMap));
-                    }
-
-                    //charge les images puis affiche le main screen
-                    preloadImages(elementList.size());
-                }
-
-            }
-        }
-    }*/
-
-    /*public Element getElement(DataMap elementDataMap) {
-        return new Element(
-                elementDataMap.getString("titre"),
-                elementDataMap.getString("description"),
-                elementDataMap.getString("url"));
-    }*/
-
     /**
-     * Précharge les images dans un cache Lru (en mémoire, pas sur le disque)
-     * Afin d'être accessibles depuis l'adapter
-     * Puis affiche le viewpager une fois terminé
-     *
-     * param sized nombre d'images à charger
-     *//*
-    public void preloadImages(final int size) {
-        //initialise le cache
-        DrawableCache.init(size);
-
-        //dans le UIThread pour avoir accès aux toasts
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                new AsyncTask<Void, Void, Void>() {
-
-                    @Override
-                    protected void onPreExecute() {
-                        super.onPreExecute();
-                        Toast.makeText(MainActivity.this, "Chargement des images", Toast.LENGTH_LONG).show();
-                    }
-
-                    @Override
-                    protected Void doInBackground(Void... params) {
-                        //charge les images 1 par 1 et les place dans un LruCache
-                        for (int i = 0; i < size; ++i) {
-                            Bitmap bitmap = getBitmap(i);
-                            Drawable drawable = null;
-                            if (bitmap != null)
-                                drawable = new BitmapDrawable(MainActivity.this.getResources(), bitmap);
-                            else
-                                drawable = new ColorDrawable(Color.BLUE);
-                            DrawableCache.getInstance().put(i, drawable);
-                        }
-                        return null;
-                    }
-
-                    @Override
-                    protected void onPostExecute(Void aVoid) {
-                        super.onPostExecute(aVoid);
-                        //affiche le viewpager
-                        //startMainScreen();
-                    }
-                }.execute();
-            }
-        });
-    }*/
+     * Déclenche l'envoi d'un message d'ouverture de lien sur le navigateur au mobile
+     * @param viewHolder
+     */
     @Override
     public void onClick(WearableListView.ViewHolder viewHolder) {
         Toast.makeText(this, "Open " + viewItemList.get(viewHolder.getLayoutPosition()).getText(), Toast.LENGTH_SHORT).show();
@@ -286,6 +202,9 @@ private List<ListViewItem> viewItemList = new ArrayList<>();
         setContentView(R.layout.activity_main);
     }
 
+    /**
+     * Fonction mystère, à renseigner par quelqu'un sachant quelle est cette chose
+     */
     @Override
     public void onTopEmptyRegionClick() {
 
