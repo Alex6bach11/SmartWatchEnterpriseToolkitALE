@@ -1,14 +1,111 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@android:color/holo_purple">
+    <TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/holo_purple"
+    android:stretchColumns="3"
+    >
+    <TableRow>
 
-    <android.support.wearable.view.GridViewPager
-        android:id="@+id/pager"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:keepScreenOn="true" />
+        <ImageButton
+            android:layout_width="63dp"
+            android:layout_height="59dp"
+            android:id="@+id/imageButton2"
+            android:layout_gravity="center_horizontal|top"
+            android:onClick="buttonClick"
+            android:src="@mipmap/smartphone"
+            android:adjustViewBounds="true"
+            android:background="@android:color/holo_purple"
+            android:textAlignment="center"
+            android:layout_column="3"
+            />
+
+
+    </TableRow>
+    <TableRow>
+
+        <ImageButton
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:id="@+id/btnToDoList"
+        android:adjustViewBounds="true"
+        android:src="@mipmap/list"
+        android:layout_gravity="right|center_vertical"
+        android:background="@android:color/holo_purple"
+
+        android:baselineAlignBottom="false"
+        android:layout_column="2"
+            android:layout_marginLeft="5dp" />
+        <ImageButton
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:id="@+id/btnOpenTouch"
+            android:adjustViewBounds="true"
+            android:src="@mipmap/opentouch"
+            android:layout_gravity="left|center_vertical"
+            android:background="@android:color/holo_purple"
+            android:baselineAlignBottom="false"
+            android:layout_column="4"
+            android:layout_marginRight="15dp" />
+    </TableRow>
+
+    <TableRow
+        android:layout_marginTop="20dp">
+        <ImageButton
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:id="@+id/btnCalendrier"
+            android:adjustViewBounds="true"
+            android:src="@mipmap/calendar"
+            android:layout_gravity="right|center_vertical"
+            android:background="@android:color/holo_purple"
+            android:baselineAlignBottom="false"
+            android:layout_column="2"
+            android:layout_marginLeft="5dp" />
+        <ImageButton
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:id="@+id/btnMail"
+            android:adjustViewBounds="true"
+            android:src="@mipmap/envelope"
+            android:layout_gravity="left|center_vertical"
+            android:background="@android:color/holo_purple"
+            android:baselineAlignBottom="false"
+            android:layout_column="4"
+            android:layout_marginRight="15dp" />
+    </TableRow>
+    <TableRow>
+        <ImageButton
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:id="@+id/btnFavori"
+            android:layout_gravity="center_horizontal|bottom"
+            android:src="@mipmap/favori64"
+            android:adjustViewBounds="true"
+            android:background="@android:color/holo_purple"
+            android:onClick="afficheFavori"
+            android:textAlignment="center"
+            android:layout_column="3"/>
+    </TableRow>
+
+</TableLayout>
+<DigitalClock
+android:layout_width="fill_parent"
+android:layout_height="wrap_content"
+android:gravity="center"
+android:textSize="30sp"
+android:textColor="@color/white"
+android:layout_gravity="center"
+    />
+    </FrameLayout>
+<!--<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/holo_purple">
 
     <android.support.wearable.view.DotsPageIndicator
         android:id="@+id/page_indicator"
@@ -27,15 +124,47 @@
         android:adjustViewBounds="true"
         android:background="@android:color/holo_purple" />
 
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Favoris"
+
+    <ImageButton
+        android:layout_width="40dp"
+        android:layout_height="40dp"
         android:id="@+id/btnFavori"
-        android:layout_gravity="center"
+        android:layout_gravity="center_horizontal|bottom"
+        android:src="@mipmap/favori64"
+        android:adjustViewBounds="true"
+        android:background="@android:color/holo_purple"
         android:onClick="afficheFavori" />
 
-</FrameLayout>
+    <android.support.wearable.view.GridViewPager
+        android:id="@+id/pager"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:keepScreenOn="true"
+        android:layout_gravity="right|bottom" />
+
+
+
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="right|bottom">
+        <ImageButton
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:id="@+id/imageButton"
+            android:adjustViewBounds="true"
+            android:src="@mipmap/envelope"
+            android:layout_gravity="right|center_vertical"
+            android:background="@android:color/holo_purple"
+            android:layout_marginRight="0dp"
+            android:baselineAlignBottom="false"
+            />
+    </LinearLayout>
+
+
+</FrameLayout>-->
 
 <!--android.support.wearable.view.BoxInsetLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
