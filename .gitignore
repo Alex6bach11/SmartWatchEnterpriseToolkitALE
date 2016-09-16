@@ -12,3 +12,4 @@ build.gradle
 gradle/wrapper
 settings.gradle
 wear/wear.iml
+*gradle*
