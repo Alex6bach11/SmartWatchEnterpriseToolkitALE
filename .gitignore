@@ -8,3 +8,6 @@
 /captures
 .idea/misc.xml
 mobile/build.gradle
+build.gradle
+gradle/wrapper
+settings.gradle
