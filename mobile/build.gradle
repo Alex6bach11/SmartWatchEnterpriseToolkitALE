@@ -19,7 +19,9 @@ android {
     }
 }
 
-
+repositories {
+    mavenCentral()
+}
 
 
 dependencies {
@@ -27,11 +29,10 @@ dependencies {
     testCompile 'junit:junit:4.12'
     wearApp project(':wear')
     compile 'com.google.android.gms:play-services-wearable:8.4.0'
-    compile 'com.android.support:appcompat-v7:24.0.0-alpha2'
     compile 'com.google.android.gms:play-services:8.4.0'
-    compile 'com.android.support:design:24.0.0-alpha2'
     compile 'com.squareup.retrofit:retrofit:1.9.0'
     compile 'com.google.android.gms:play-services-ads:8.4.0'
     compile 'com.google.android.gms:play-services-identity:8.4.0'
     compile 'com.google.android.gms:play-services-gcm:8.4.0'
+    compile 'com.google.apis:google-api-services-tasks:v1-rev45-1.22.0'
 }
