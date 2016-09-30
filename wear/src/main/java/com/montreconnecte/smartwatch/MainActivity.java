@@ -1,6 +1,11 @@
 package com.montreconnecte.smartwatch;
 
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.wearable.view.WearableListView;
 import android.util.Log;
@@ -32,6 +37,7 @@ private List<ListViewItem> viewItemList = new ArrayList<>();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
     }
+
 
     /**
      * gère la liste des liens en favoris sur la montre et leurs affichage
