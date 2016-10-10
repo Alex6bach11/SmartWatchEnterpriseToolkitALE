@@ -2,9 +2,11 @@ package com.montreconnecte.smartwatch;
 
 import android.Manifest;
 import android.accounts.AccountManager;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
@@ -35,8 +37,10 @@ import com.google.api.client.json.JsonFactory;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.client.util.ExponentialBackOff;
 import com.google.api.services.tasks.TasksScopes;
+import com.google.api.services.tasks.model.Task;
 import com.google.api.services.tasks.model.TaskList;
 import com.google.api.services.tasks.model.TaskLists;
+import com.google.api.services.tasks.model.Tasks;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -58,6 +62,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     private static final String PREF_ACCOUNT_NAME = "accountName";
     private static final String[] SCOPES = { TasksScopes.TASKS_READONLY };
 
+    private MakeRequestTask makeRequestTask;
+    private List<TaskList> tasklists = null;
+    private TaskList taskList = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,6 +79,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             public void onClick(View view) {
                 getResultsFromApi();
                 System.out.println("TEST");
+                makeRequestTask = new MakeRequestTask(mCredential);
+                makeRequestTask.execute();
             }
         });
 
@@ -82,6 +91,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
 
     }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -128,7 +138,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         } else if (! isDeviceOnline()) {
             System.out.println("No network connection available.");
         } else {
-            new MakeRequestTask(mCredential).execute();
+            makeRequestTask = new MakeRequestTask(mCredential);
+            chooseTaskList();
+            //new MakeRequestTask(mCredential).execute();
             System.out.println("makeRequestTask");
         }
     }
@@ -286,36 +298,43 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
          */
         private List<String> getDataFromApi() throws IOException {
             // List up to 10 task lists.
-            List<String> taskListInfo = new ArrayList<String>();
+
             TaskLists result = mService.tasklists().list()
                     .setMaxResults(Long.valueOf(10))
                     .execute();
-            List<TaskList> tasklists = result.getItems();
-            if (tasklists != null) {
+            tasklists = result.getItems();
+            System.out.println("getDataFromAPI");
+            /*if (tasklists != null) {
                 for (TaskList tasklist : tasklists) {
                     taskListInfo.add(String.format("%s (%s)\n",
                             tasklist.getTitle(),
                             tasklist.getId()));
+
+
+
+
+
+
+                    Tasks tasks = mService.tasks().list("@default").execute();
+
+                    for (Task task : tasks.getItems()) {
+                        System.out.println(task.getTitle());
+                    }
+
                 }
-            }
-            return taskListInfo;
+            }*/
+
+            return null;
         }
 
 
         @Override
         protected void onPreExecute() {
-            /*mOutputText.setText("");
-            mProgress.show();*/
+
         }
 
         @Override
         protected void onPostExecute(List<String> output) {
-            if (output == null || output.size() == 0) {
-                System.out.println("No results returned.");
-            } else {
-                output.add(0, "Data retrieved using the Google Tasks API:");
-                System.out.println(TextUtils.join("\n", output));
-            }
         }
 
         @Override
@@ -340,6 +359,33 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         }
     }
 
+    private void chooseTaskList(){
+        AlertDialog.Builder builder;
 
+        System.out.println("chooseTaskList");
+        if(tasklists != null) {
+            CharSequence choices[] = new CharSequence[tasklists.size()];
 
+            int i = 0;
+            for (TaskList taskList : tasklists) {
+                choices[i] = taskList.getTitle();
+                i++;
+            }
+
+            builder = new AlertDialog.Builder(MainActivity.this);
+            builder.setTitle("Choisissez une liste de tâches");
+            builder.setItems(choices, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    // the user clicked on colors[which]
+                    taskList = tasklists.get(which);
+
+                    System.out.println(taskList.getTitle()+" ("+taskList.getId()+")");
+                }
+            });
+            builder.show();
+        }
     }
+
+
+}
