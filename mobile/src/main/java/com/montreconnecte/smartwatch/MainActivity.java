@@ -25,6 +25,7 @@ import android.text.TextUtils;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Button;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
@@ -46,6 +47,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import pub.devrel.easypermissions.AfterPermissionGranted;
 import pub.devrel.easypermissions.EasyPermissions;
@@ -63,8 +65,10 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     private static final String[] SCOPES = { TasksScopes.TASKS_READONLY };
 
     private MakeRequestTask makeRequestTask;
+    private PrintTask printTask;
     private List<TaskList> tasklists = null;
     private TaskList taskList = null;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,24 +76,37 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        Button button = (Button) findViewById(R.id.selectTodoList);
+        button.setEnabled(false);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                getResultsFromApi();
-                System.out.println("TEST");
-                makeRequestTask = new MakeRequestTask(mCredential);
-                makeRequestTask.execute();
-            }
-        });
+    }
 
-
+    @AfterPermissionGranted(REQUEST_PERMISSION_GET_ACCOUNTS)
+    public void selectAccountG(View v){
         mCredential = GoogleAccountCredential.usingOAuth2(
                 getApplicationContext(), Arrays.asList(SCOPES))
                 .setBackOff(new ExponentialBackOff());
 
+        chooseGoogleAccount();
 
+    }
+
+    public void selectTodoList(View v){
+        if(mCredential != null) {
+
+            if (! isGooglePlayServicesAvailable()) {
+                acquireGooglePlayServices();
+            }
+            else{
+                if (isDeviceOnline()) {
+
+                    System.out.println("Lancement de Choose task list");
+                    taskList = null;
+                    chooseAndSendTaskList();
+
+                }
+            }
+        }
     }
 
 
@@ -127,39 +144,24 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         startActivity(lancerNavigateur);
     }
 
-    private void getResultsFromApi() {
-        System.out.println("getResultFromAPI");
+    private void chooseGoogleAccount() {
         if (! isGooglePlayServicesAvailable()) {
             acquireGooglePlayServices();
-            System.out.println("acquireGooglePlayServices");
-        } else if (mCredential.getSelectedAccountName() == null) {
-            chooseAccount();
-            System.out.println("chooseAccount");
-        } else if (! isDeviceOnline()) {
-            System.out.println("No network connection available.");
-        } else {
-            makeRequestTask = new MakeRequestTask(mCredential);
-            chooseTaskList();
-            //new MakeRequestTask(mCredential).execute();
-            System.out.println("makeRequestTask");
         }
+        chooseAccount();
     }
 
-    @AfterPermissionGranted(REQUEST_PERMISSION_GET_ACCOUNTS)
     private void chooseAccount() {
         if (EasyPermissions.hasPermissions(
                 this, Manifest.permission.GET_ACCOUNTS)) {
-            String accountName = getPreferences(Context.MODE_PRIVATE)
-                    .getString(PREF_ACCOUNT_NAME, null);
-            if (accountName != null) {
-                mCredential.setSelectedAccountName(accountName);
-                getResultsFromApi();
-            } else {
-                // Start a dialog from which the user can choose an account
-                startActivityForResult(
-                        mCredential.newChooseAccountIntent(),
-                        REQUEST_ACCOUNT_PICKER);
-            }
+
+
+            startActivityForResult(
+                   mCredential.newChooseAccountIntent(),
+                   REQUEST_ACCOUNT_PICKER);
+
+
+
         } else {
             // Request the GET_ACCOUNTS permission via a user dialog
             EasyPermissions.requestPermissions(
@@ -169,6 +171,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                     Manifest.permission.GET_ACCOUNTS);
         }
     }
+
 
     @Override
     protected void onActivityResult(
@@ -180,10 +183,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                     System.out.println(
                             "This app requires Google Play Services. Please install " +
                                     "Google Play Services on your device and relaunch this app.");
-                } else {
-                    getResultsFromApi();
-                }
-                break;
+                }                break;
             case REQUEST_ACCOUNT_PICKER:
                 if (resultCode == RESULT_OK && data != null &&
                         data.getExtras() != null) {
@@ -196,13 +196,15 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                         editor.putString(PREF_ACCOUNT_NAME, accountName);
                         editor.apply();
                         mCredential.setSelectedAccountName(accountName);
-                        getResultsFromApi();
+
+                        makeRequestTask = new MakeRequestTask(mCredential);
+
+                        try {
+                            makeRequestTask.execute();
+                        } catch(Exception exception){
+                            System.out.println("Erreur lors de l'éxécution de l'asynctask ");
+                        }
                     }
-                }
-                break;
-            case REQUEST_AUTHORIZATION:
-                if (resultCode == RESULT_OK) {
-                    getResultsFromApi();
                 }
                 break;
         }
@@ -262,6 +264,53 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         dialog.show();
     }
 
+    //Créer une autre asyncTask pour récupérer les items
+    private class PrintTask extends AsyncTask<Void, Void, List<String>> {
+        private com.google.api.services.tasks.Tasks mService = null;
+
+        public PrintTask(GoogleAccountCredential credential) {
+            HttpTransport transport = AndroidHttp.newCompatibleTransport();
+            JsonFactory jsonFactory = JacksonFactory.getDefaultInstance();
+            mService = new com.google.api.services.tasks.Tasks.Builder(
+                    transport, jsonFactory, credential)
+                    .setApplicationName("Google Tasks API Android Quickstart")
+                    .build();
+        }
+
+        /**
+         * Background task to call Google Tasks API.
+         * @param params no parameters needed for this task.
+         */
+        @Override
+        protected List<String> doInBackground(Void... params) {
+
+            printList();
+            return null;
+        }
+
+        private void printList(){
+
+            System.out.println("printList => taskList == NULL !");
+            while(taskList==null) {}
+            Tasks tasks;
+            try {
+
+                tasks = mService.tasks().list(taskList.getId()).execute();
+
+                for (Task task : tasks.getItems()) {
+                    System.out.println(task.getTitle());
+                }
+            } catch (IOException e) {
+                System.out.println("IOException");
+            }
+
+        }
+
+    }
+
+
+
+
     private class MakeRequestTask extends AsyncTask<Void, Void, List<String>> {
         private com.google.api.services.tasks.Tasks mService = null;
         private Exception mLastError = null;
@@ -281,8 +330,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
          */
         @Override
         protected List<String> doInBackground(Void... params) {
+
             try {
-                return getDataFromApi();
+                return getTaskLists();
             } catch (Exception e) {
                 mLastError = e;
                 cancel(true);
@@ -296,33 +346,14 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
          *         there are no task lists found.
          * @throws IOException
          */
-        private List<String> getDataFromApi() throws IOException {
+        private List<String> getTaskLists() throws IOException {
             // List up to 10 task lists.
 
             TaskLists result = mService.tasklists().list()
                     .setMaxResults(Long.valueOf(10))
                     .execute();
             tasklists = result.getItems();
-            System.out.println("getDataFromAPI");
-            /*if (tasklists != null) {
-                for (TaskList tasklist : tasklists) {
-                    taskListInfo.add(String.format("%s (%s)\n",
-                            tasklist.getTitle(),
-                            tasklist.getId()));
-
-
-
-
-
-
-                    Tasks tasks = mService.tasks().list("@default").execute();
-
-                    for (Task task : tasks.getItems()) {
-                        System.out.println(task.getTitle());
-                    }
-
-                }
-            }*/
+            System.out.println("tasklists renseigné");
 
             return null;
         }
@@ -335,6 +366,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
         @Override
         protected void onPostExecute(List<String> output) {
+            Button button = (Button) findViewById(R.id.selectTodoList);
+            button.setEnabled(true);
         }
 
         @Override
@@ -359,11 +392,13 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         }
     }
 
-    private void chooseTaskList(){
+    private void chooseAndSendTaskList(){
         AlertDialog.Builder builder;
 
         System.out.println("chooseTaskList");
         if(tasklists != null) {
+            System.out.println("tasklists != null");
+
             CharSequence choices[] = new CharSequence[tasklists.size()];
 
             int i = 0;
@@ -384,8 +419,10 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 }
             });
             builder.show();
+
+            printTask = new PrintTask(mCredential);
+
+            printTask.execute();
         }
     }
-
-
 }

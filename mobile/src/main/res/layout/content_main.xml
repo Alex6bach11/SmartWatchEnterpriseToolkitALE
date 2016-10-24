@@ -12,10 +12,34 @@
     tools:context="com.montreconnecte.smartwatchenterprisetoolkit.MainActivity"
     tools:showIn="@layout/activity_main">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello World!"
-        android:id="@+id/textView" />
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingLeft="16dp"
+        android:paddingRight="16dp"
+        android:orientation="vertical">
 
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Séléctionner compte google"
+            android:id="@+id/selectAccountG"
+            android:onClick="selectAccountG"/>
+
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Séléctionner todo List"
+            android:id="@+id/selectTodoList"
+            android:onClick="selectTodoList"
+            android:clickable = "false"/>
+
+        <android.support.v7.widget.AppCompatTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/printList"/>
+
+
+    </LinearLayout>
 </RelativeLayout>
