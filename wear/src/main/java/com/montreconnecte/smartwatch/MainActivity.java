@@ -11,6 +11,7 @@ import android.support.wearable.view.WearableListView;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -31,6 +32,7 @@ public class MainActivity extends Activity implements GoogleApiClient.Connection
 
 private List<ListViewItem> viewItemList = new ArrayList<>();
     protected GoogleApiClient mApiClient;
+    private String todo_list ="";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,9 +40,8 @@ private List<ListViewItem> viewItemList = new ArrayList<>();
         setContentView(R.layout.activity_main);
     }
 
-
     /**
-     * gère la liste des liens en favoris sur la montre et leurs affichage
+     * gère la todoList courante sur la montre et leurs affichage
      * @param v vue d'affichage
      */
     public void afficheFavori(View v) {
@@ -55,8 +56,28 @@ private List<ListViewItem> viewItemList = new ArrayList<>();
 
         wearableListView.setAdapter(new ListViewAdapter(this, viewItemList));
         wearableListView.setClickListener(this);
+    }
+
+
+    /**
+     * gère la liste des liens en favoris sur la montre et leurs affichage
+     * @param v vue d'affichage
+     */
+    public void afficheTodoList(View v) {
+
+        setContentView(R.layout.main_list_activity);
+
+        TextView textView = (TextView) findViewById(R.id.todo_textView);
+
+        String list = "test";
+
+        if(todo_list!=""){list = todo_list.replace(';','\n');}
+        else{list = "test1\ntest2\ntest3";}
+
+        textView.setText(list);
 
     }
+
     /**
      * A l'ouverture, connecte la montre au Google API Client / donc au vibrator
      */
@@ -147,7 +168,7 @@ private List<ListViewItem> viewItemList = new ArrayList<>();
         Log.e("TEST","LOG LOG : TEST TEST "+message+" path = "+path);
 
 
-        if(path.equals("vib")){
+        if(path.equals("vib")) {
 
             runOnUiThread(new Runnable() {
                 @Override
@@ -165,6 +186,8 @@ private List<ListViewItem> viewItemList = new ArrayList<>();
                     }
                 }
             });
+        } else if (path.equals("todoList")){
+            this.todo_list = message;
         }
     }
 

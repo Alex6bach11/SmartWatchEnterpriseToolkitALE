@@ -5,10 +5,12 @@ import android.accounts.AccountManager;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.net.ConnectivityManager;
@@ -16,12 +18,17 @@ import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.IBinder;
+import android.os.Message;
+import android.os.Messenger;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -29,6 +36,11 @@ import android.widget.Button;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.wearable.MessageApi;
+import com.google.android.gms.wearable.Node;
+import com.google.android.gms.wearable.NodeApi;
+import com.google.android.gms.wearable.Wearable;
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential;
 import com.google.api.client.googleapis.extensions.android.gms.auth.GooglePlayServicesAvailabilityIOException;
@@ -68,7 +80,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     private PrintTask printTask;
     private List<TaskList> tasklists = null;
     private TaskList taskList = null;
-
+    private GoogleApiClient mGoogleApiClient; //Sert à communiquer avec le wearService
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,11 +90,41 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         setSupportActionBar(toolbar);
         Button button = (Button) findViewById(R.id.selectTodoList);
         button.setEnabled(false);
+        if(null == mGoogleApiClient) {
+            mGoogleApiClient = new GoogleApiClient.Builder(this)
+                    .addApi(Wearable.API)
+                    .build();
+            System.out.println("créé : mGoogleApiClient");
+        }
 
+        if(!mGoogleApiClient.isConnected()){
+            mGoogleApiClient.connect();
+            System.out.println("Connecté : mGoogleApiClient");
+        }
     }
+
+    class SendWearServiceMessage extends Thread {
+        String path;
+        String message;
+
+        // Constructor to send a message to the data layer
+        SendWearServiceMessage(String p, String msg) {
+            path = p;
+            message = msg;
+        }
+
+        public void run() {
+            SendMessageTask messageTask = new SendMessageTask(path,message);
+
+            messageTask.execute();
+        }
+    }
+
+
 
     @AfterPermissionGranted(REQUEST_PERMISSION_GET_ACCOUNTS)
     public void selectAccountG(View v){
+
         mCredential = GoogleAccountCredential.usingOAuth2(
                 getApplicationContext(), Arrays.asList(SCOPES))
                 .setBackOff(new ExponentialBackOff());
@@ -92,6 +134,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     }
 
     public void selectTodoList(View v){
+
+
         if(mCredential != null) {
 
             if (! isGooglePlayServicesAvailable()) {
@@ -290,16 +334,18 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
         private void printList(){
 
-            System.out.println("printList => taskList == NULL !");
             while(taskList==null) {}
             Tasks tasks;
+            String res="";
             try {
 
                 tasks = mService.tasks().list(taskList.getId()).execute();
 
                 for (Task task : tasks.getItems()) {
-                    System.out.println(task.getTitle());
+                    res+=task.getTitle()+";";
                 }
+                new SendWearServiceMessage("mainActivity",res).run();
+
             } catch (IOException e) {
                 System.out.println("IOException");
             }
@@ -309,6 +355,34 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     }
 
 
+    private class SendMessageTask extends AsyncTask<Void, Void, List<String>> {
+        private String path;
+        private String message;
+
+        public SendMessageTask(String path, String message) {
+            this.path = path;
+            this.message = message;
+        }
+
+
+        @Override
+        protected List<String> doInBackground(Void... params) {
+
+            NodeApi.GetLocalNodeResult nodes = Wearable.NodeApi.getLocalNode(mGoogleApiClient).await();
+            Node node = nodes.getNode();
+            System.out.println("Activity Node is : " + node.getId() + " - " + node.getDisplayName());
+            MessageApi.SendMessageResult result = Wearable.MessageApi.sendMessage(mGoogleApiClient, node.getId(), path, message.getBytes()).await();
+            if (result.getStatus().isSuccess()) {
+                System.out.println("Activity Message: {" + message + "} sent to: " + node.getDisplayName());
+            }
+            else {
+                // Log an error
+                System.out.println("ERROR: failed to send Activity Message");
+            }
+            return null;
+        }
+
+    }
 
 
     private class MakeRequestTask extends AsyncTask<Void, Void, List<String>> {

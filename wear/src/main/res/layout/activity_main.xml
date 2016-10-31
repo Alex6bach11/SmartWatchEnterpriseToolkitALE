@@ -36,7 +36,7 @@
         android:src="@mipmap/list"
         android:layout_gravity="right|center_vertical"
         android:background="@android:color/holo_purple"
-
+        android:onClick="afficheTodoList"
         android:baselineAlignBottom="false"
         android:layout_column="2"
             android:layout_marginLeft="5dp" />
