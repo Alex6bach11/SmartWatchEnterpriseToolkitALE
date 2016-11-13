@@ -186,7 +186,6 @@ public class WearService extends WearableListenerService {
 
             } else if (path.equals("getMode")) {  //Récéption du message "getMode"
                 Handler mHandler = new Handler(getMainLooper());
-                Log.e("LOG envoi Mobile", "getMode : démarrage");
                 final AudioManager amanager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
 
                 if (amanager.getRingerMode() == AudioManager.RINGER_MODE_VIBRATE) {

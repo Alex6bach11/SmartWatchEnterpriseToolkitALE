@@ -5,6 +5,10 @@ android {
     compileSdkVersion 23
     buildToolsVersion "23.0.2"
 
+    lintOptions{
+        disable "ResourceType"
+    }
+
     defaultConfig {
         applicationId "com.montreconnecte.smartwatch"
         minSdkVersion 20

@@ -77,9 +77,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     private static final String[] SCOPES = { TasksScopes.TASKS_READONLY };
 
     private MakeRequestTask makeRequestTask;
-    private PrintTask printTask;
+    public PrintTask printTask;
     private List<TaskList> tasklists = null;
-    private TaskList taskList = null;
+    public TaskList taskList = null;
     private GoogleApiClient mGoogleApiClient; //Sert à communiquer avec le wearService
 
     @Override
@@ -489,7 +489,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                     // the user clicked on colors[which]
                     taskList = tasklists.get(which);
 
-                    System.out.println(taskList.getTitle()+" ("+taskList.getId()+")");
                 }
             });
             builder.show();

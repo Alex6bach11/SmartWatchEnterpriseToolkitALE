@@ -11,6 +11,7 @@
         android:layout_marginStart="8dp"
         android:gravity="center"
         android:alpha="0.6"
-        android:textSize="12sp" />
+        android:textSize="12sp"
+        android:text="Aucune todoList selectionnée"/>
 
 </LinearLayout>

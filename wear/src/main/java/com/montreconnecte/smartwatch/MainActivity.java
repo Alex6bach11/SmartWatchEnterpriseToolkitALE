@@ -5,6 +5,7 @@ import android.accounts.AccountManager;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.wearable.view.WearableListView;
@@ -60,19 +61,19 @@ private List<ListViewItem> viewItemList = new ArrayList<>();
 
 
     /**
-     * gère la liste des liens en favoris sur la montre et leurs affichage
+     * gère l'affichage de la todolist
      * @param v vue d'affichage
      */
     public void afficheTodoList(View v) {
 
-        setContentView(R.layout.main_list_activity);
+        setContentView(R.layout.todolist);
 
         TextView textView = (TextView) findViewById(R.id.todo_textView);
 
-        String list = "test";
+        String list = "Aucune todolist sélectionnée.";
 
-        if(todo_list!=""){list = todo_list.replace(';','\n');}
-        else{list = "test1\ntest2\ntest3";}
+
+        if(this.todo_list != ""){list = this.todo_list.replace(';','\n');}
 
         textView.setText(list);
 
@@ -122,6 +123,7 @@ private List<ListViewItem> viewItemList = new ArrayList<>();
 
         //Démarre un thread qui sera chargé de maintenir à jour l'affichage du mode de sonnerie du mobile sur la montre
         Thread thread = new Thread() {
+
             @Override
             public void run() {
                 while (true) {
@@ -133,7 +135,15 @@ private List<ListViewItem> viewItemList = new ArrayList<>();
                     }
 
                     sendMessage("getMode", "");
-                    Log.e("LOG RUN", "RUN");
+                    /*if(MainActivity.this.todo_list!= null){
+                        TextView textView = (TextView) findViewById(R.id.todo_textView);
+
+                        String list = "Aucune todolist sélectionnée.";
+
+                        if(MainActivity.this.todo_list != ""){list = MainActivity.this.todo_list.replace(';','\n');}
+
+                        textView.setText(list);
+                    }*/
 
                 }
             }
@@ -165,8 +175,13 @@ private List<ListViewItem> viewItemList = new ArrayList<>();
         final String path = messageEvent.getPath();
         final String message = new String(messageEvent.getData());
 
-        Log.e("TEST","LOG LOG : TEST TEST "+message+" path = "+path);
+        Context context = getApplicationContext();
+        CharSequence text = "Message = "+message+" \npath = "+path;
+        int duration = Toast.LENGTH_SHORT;
 
+        Toast t = Toast.makeText(context,text,duration);
+
+        t.show();
 
         if(path.equals("vib")) {
 
@@ -187,6 +202,8 @@ private List<ListViewItem> viewItemList = new ArrayList<>();
                 }
             });
         } else if (path.equals("todoList")){
+            t = Toast.makeText(context,"set up du message",duration);
+            t.show();
             this.todo_list = message;
         }
     }
