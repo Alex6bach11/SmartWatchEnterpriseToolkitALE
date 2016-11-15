@@ -158,6 +158,7 @@ public class WearService extends WearableListenerService {
             e.printStackTrace();
         }
 
+        //ICI set une valeur pour la liste à pinguer à la montre
         if(path.equals("mainActivity")){ //Si récéption d'un message de la mainActivity
             System.out.println("Envoi du message :"+message);
             sendMessage("todoList", message);

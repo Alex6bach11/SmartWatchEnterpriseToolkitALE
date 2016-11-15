@@ -77,6 +77,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     private static final String[] SCOPES = { TasksScopes.TASKS_READONLY };
 
     private MakeRequestTask makeRequestTask;
+    public String taskListContent;
+    public PingTodoListTask pingTodoListTask;
     public PrintTask printTask;
     private List<TaskList> tasklists = null;
     public TaskList taskList = null;
@@ -346,6 +348,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 }
                 new SendWearServiceMessage("mainActivity",res).run();
 
+                System.out.println("TaskListContent set à :" + res);
+                taskListContent = res;
+
             } catch (IOException e) {
                 System.out.println("IOException");
             }
@@ -353,6 +358,31 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         }
 
     }
+
+    private class PingTodoListTask extends AsyncTask<Void, Void, Void> {
+
+        public PingTodoListTask() {
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            while(taskList != null){
+                try{
+                    Thread.sleep(5000);
+                }catch(InterruptedException e){
+                    e.printStackTrace();
+                }
+                System.out.println("contenu envoyé : "+ taskListContent);
+
+                new SendWearServiceMessage("mainActivity",taskListContent).run();
+
+            }
+
+            return null;
+        }
+
+    }
+
 
 
     private class SendMessageTask extends AsyncTask<Void, Void, List<String>> {
@@ -370,15 +400,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
             NodeApi.GetLocalNodeResult nodes = Wearable.NodeApi.getLocalNode(mGoogleApiClient).await();
             Node node = nodes.getNode();
-            System.out.println("Activity Node is : " + node.getId() + " - " + node.getDisplayName());
             MessageApi.SendMessageResult result = Wearable.MessageApi.sendMessage(mGoogleApiClient, node.getId(), path, message.getBytes()).await();
-            if (result.getStatus().isSuccess()) {
-                System.out.println("Activity Message: {" + message + "} sent to: " + node.getDisplayName());
-            }
-            else {
-                // Log an error
-                System.out.println("ERROR: failed to send Activity Message");
-            }
             return null;
         }
 
@@ -496,6 +518,10 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             printTask = new PrintTask(mCredential);
 
             printTask.execute();
+
+            pingTodoListTask = new PingTodoListTask();
+
+            pingTodoListTask.execute();
         }
     }
 }
