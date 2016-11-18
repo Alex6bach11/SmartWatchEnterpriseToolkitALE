@@ -183,7 +183,7 @@ private List<ListViewItem> viewItemList = new ArrayList<>();
 
         t.show();
 
-        if(path.equals("vib")) {
+        if(path =="vib") {
 
             runOnUiThread(new Runnable() {
                 @Override
@@ -201,11 +201,40 @@ private List<ListViewItem> viewItemList = new ArrayList<>();
                     }
                 }
             });
-        } else if (path.equals("todoList")){
-            t = Toast.makeText(context,"set up du message",duration);
-            t.show();
+        } else if (path == "todoList"){
             this.todo_list = message;
+
+            Toast.makeText(this, "todoList: "+message, Toast.LENGTH_SHORT).show();
+
+
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+
+                    Toast.makeText(MainActivity.this, "RunOnUiThread", Toast.LENGTH_SHORT).show();
+
+                    TextView textView = (TextView) findViewById(R.id.todo_textView);
+
+                    String list = "Aucune todolist sélectionnée.";
+
+
+
+
+
+
+
+
+
+                    if (MainActivity.this.todo_list != "") {
+                        list = MainActivity.this.todo_list.replace(';', '\n');
+                    }
+
+                    textView.setText(list);
+                }
+            });
+
         }
+
     }
 
     /**

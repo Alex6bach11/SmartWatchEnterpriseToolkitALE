@@ -78,7 +78,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
     private MakeRequestTask makeRequestTask;
     public String taskListContent;
-    public PingTodoListTask pingTodoListTask;
     public PrintTask printTask;
     private List<TaskList> tasklists = null;
     public TaskList taskList = null;
@@ -348,8 +347,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 }
                 new SendWearServiceMessage("mainActivity",res).run();
 
-                System.out.println("TaskListContent set à :" + res);
-                taskListContent = res;
+                /*System.out.println("TaskListContent set à :" + res);
+                taskListContent = res;*/
 
             } catch (IOException e) {
                 System.out.println("IOException");
@@ -358,32 +357,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         }
 
     }
-
-    private class PingTodoListTask extends AsyncTask<Void, Void, Void> {
-
-        public PingTodoListTask() {
-        }
-
-        @Override
-        protected Void doInBackground(Void... params) {
-            while(taskList != null){
-                try{
-                    Thread.sleep(5000);
-                }catch(InterruptedException e){
-                    e.printStackTrace();
-                }
-                System.out.println("contenu envoyé : "+ taskListContent);
-
-                new SendWearServiceMessage("mainActivity",taskListContent).run();
-
-            }
-
-            return null;
-        }
-
-    }
-
-
 
     private class SendMessageTask extends AsyncTask<Void, Void, List<String>> {
         private String path;
@@ -519,9 +492,9 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
             printTask.execute();
 
-            pingTodoListTask = new PingTodoListTask();
+            /*pingTodoListTask = new PingTodoListTask();
 
-            pingTodoListTask.execute();
+            pingTodoListTask.execute();*/
         }
     }
 }
