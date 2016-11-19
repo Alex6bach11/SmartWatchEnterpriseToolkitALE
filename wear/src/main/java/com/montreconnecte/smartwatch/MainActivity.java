@@ -179,11 +179,10 @@ private List<ListViewItem> viewItemList = new ArrayList<>();
         CharSequence text = "Message = "+message+" \npath = "+path;
         int duration = Toast.LENGTH_SHORT;
 
-        Toast t = Toast.makeText(context,text,duration);
+        //Toast t = Toast.makeText(context,text,duration);
+        //t.show();
 
-        t.show();
-
-        if(path =="vib") {
+        if(path.equals("vib")) {
 
             runOnUiThread(new Runnable() {
                 @Override
@@ -201,37 +200,21 @@ private List<ListViewItem> viewItemList = new ArrayList<>();
                     }
                 }
             });
-        } else if (path == "todoList"){
+        } else if (path.equals("todoList")){
             this.todo_list = message;
 
-            Toast.makeText(this, "todoList: "+message, Toast.LENGTH_SHORT).show();
 
-
-            runOnUiThread(new Runnable() {
+            /*runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
 
-                    Toast.makeText(MainActivity.this, "RunOnUiThread", Toast.LENGTH_SHORT).show();
-
                     TextView textView = (TextView) findViewById(R.id.todo_textView);
 
-                    String list = "Aucune todolist sélectionnée.";
-
-
-
-
-
-
-
-
-
-                    if (MainActivity.this.todo_list != "") {
-                        list = MainActivity.this.todo_list.replace(';', '\n');
-                    }
+                    String list = message;
 
                     textView.setText(list);
                 }
-            });
+            });*/
 
         }
 
@@ -272,7 +255,7 @@ private List<ListViewItem> viewItemList = new ArrayList<>();
      */
     @Override
     public void onClick(WearableListView.ViewHolder viewHolder) {
-        Toast.makeText(this, "Open " + viewItemList.get(viewHolder.getLayoutPosition()).getText(), Toast.LENGTH_SHORT).show();
+        //Toast.makeText(this, "Open " + viewItemList.get(viewHolder.getLayoutPosition()).getText(), Toast.LENGTH_SHORT).show();
         sendMessage("lien", viewItemList.get(viewHolder.getLayoutPosition()).getUrl());
         setContentView(R.layout.activity_main);
     }

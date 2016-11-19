@@ -81,6 +81,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
     public PrintTask printTask;
     private List<TaskList> tasklists = null;
     public TaskList taskList = null;
+    public PingThread pingThread;
     private GoogleApiClient mGoogleApiClient; //Sert à communiquer avec le wearService
 
     @Override
@@ -343,12 +344,24 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                 tasks = mService.tasks().list(taskList.getId()).execute();
 
                 for (Task task : tasks.getItems()) {
-                    res+=task.getTitle()+";";
+                    res+=task.getTitle()+"\n";
                 }
                 new SendWearServiceMessage("mainActivity",res).run();
 
-                /*System.out.println("TaskListContent set à :" + res);
-                taskListContent = res;*/
+
+                if(pingThread != null) {
+                    Log.e("PingThread", String.valueOf(pingThread.isAlive()));
+                }
+
+                if(pingThread != null && pingThread.isAlive()){
+                    pingThread.interrupt();
+                    pingThread = new PingThread(res);
+                    pingThread.start();
+                } else {
+                    pingThread = new PingThread(res);
+                    pingThread.start();
+                }
+
 
             } catch (IOException e) {
                 System.out.println("IOException");
@@ -422,7 +435,7 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
                     .setMaxResults(Long.valueOf(10))
                     .execute();
             tasklists = result.getItems();
-            System.out.println("tasklists renseigné");
+            System.out.println("tasklists renseignée");
 
             return null;
         }
@@ -492,9 +505,37 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
 
             printTask.execute();
 
+
             /*pingTodoListTask = new PingTodoListTask();
 
             pingTodoListTask.execute();*/
+        }
+    }
+
+    class PingThread extends Thread {
+
+        private String m;
+
+        public PingThread (String message){
+            m = message;
+        }
+
+        @Override
+        public void run() {
+
+            while(true) {
+                Log.e("WearService : ", "sending => " + m);
+                SendMessageTask messageTask = new SendMessageTask("mainActivity",m);
+
+                messageTask.execute();
+                try {
+                    Thread.sleep(5000);
+                } catch (InterruptedException e) {
+                    Log.e("ThreadRunning", "Thread stopped");
+                    interrupt();
+                    break;
+                }
+            }
         }
     }
 }

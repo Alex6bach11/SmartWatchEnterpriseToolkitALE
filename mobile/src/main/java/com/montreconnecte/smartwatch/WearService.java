@@ -29,6 +29,9 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
+
+
+
 /**
  * Created by baptiste on 14/04/16.
  *
@@ -40,7 +43,6 @@ public class WearService extends WearableListenerService {
     protected GoogleApiClient mApiClient;
     private BroadcastReceiver receiver;
     private IntentFilter filter;
-    private PingTodoListTask pingTodoListTask;
     private String taskListContent;
 
 
@@ -98,7 +100,6 @@ public class WearService extends WearableListenerService {
 
         nodeAPITask.execute();
 
-        pingTodoListTask = new PingTodoListTask();
     }
 
     class NodeAPITask extends AsyncTask {
@@ -119,7 +120,6 @@ public class WearService extends WearableListenerService {
         unregisterReceiver(receiver);
         super.onDestroy();
         mApiClient.disconnect();
-        pingTodoListTask.cancel(true);
     }
 
     /**
@@ -145,28 +145,6 @@ public class WearService extends WearableListenerService {
     }
 
 
-    private class PingTodoListTask extends AsyncTask<Void, Void, Void> {
-
-        public PingTodoListTask() {
-        }
-
-        @Override
-        protected Void doInBackground(Void... params) {
-
-            while(true) {
-                try {
-                    Thread.sleep(300);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                Log.e("WearService : ", "sending => " + taskListContent);
-                sendMessage("todoList", taskListContent);
-            }
-
-        }
-
-    }
-
     /**
      * Appellé à la réception d'un message envoyé depuis la montre ou de la mainActivity
      *
@@ -187,14 +165,12 @@ public class WearService extends WearableListenerService {
             e.printStackTrace();
         }
 
-        //ICI set une valeur pour la liste à pinguer à la montre
-        if(path.equals("mainActivity")){ //Si récéption d'un message de la mainActivity
-            System.out.println("Envoi du message :"+message);
+        if(path.equals("mainActivity")){
+            System.out.println("Envoi du message :" + message);
 
-            pingTodoListTask.cancel(true);
             sendMessage("todoList", message);
-            taskListContent = message;
-            pingTodoListTask.execute();
+
+
         } else { //Si récéption d'un message de la montre
 
             //Ouvre une connexion vers la montre
