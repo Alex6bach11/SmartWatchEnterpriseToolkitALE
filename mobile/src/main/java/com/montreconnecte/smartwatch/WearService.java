@@ -6,10 +6,15 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.media.AudioManager;
 import android.net.Uri;
+import android.os.AsyncTask;
+import android.os.Binder;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
+import android.os.Messenger;
 import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -24,6 +29,9 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
+
+
+
 /**
  * Created by baptiste on 14/04/16.
  *
@@ -35,6 +43,8 @@ public class WearService extends WearableListenerService {
     protected GoogleApiClient mApiClient;
     private BroadcastReceiver receiver;
     private IntentFilter filter;
+    private String taskListContent;
+
 
     private volatile HandlerThread mHandlerThread;
     private ServiceHandler mServiceHandler;
@@ -65,7 +75,6 @@ public class WearService extends WearableListenerService {
                 .addApi(Wearable.API)
                 .build();
         mApiClient.connect();
-        Log.e("LOG create", "create");
         receiver=new BroadcastReceiver(){
             @Override
             public void onReceive(Context context, Intent intent) {
@@ -87,7 +96,21 @@ public class WearService extends WearableListenerService {
                 AudioManager.RINGER_MODE_CHANGED_ACTION);
         registerReceiver(receiver, filter);
 
+        NodeAPITask nodeAPITask = new NodeAPITask();
+
+        nodeAPITask.execute();
+
     }
+
+    class NodeAPITask extends AsyncTask {
+        @Override
+        protected Object doInBackground(Object... params) {
+
+            NodeApi.GetLocalNodeResult nodes = Wearable.NodeApi.getLocalNode(mApiClient).await();
+            return null;
+        }
+    }
+
 
     /**
      * Déconnecte les APIs et les listener à la fermeture de l'application
@@ -121,8 +144,9 @@ public class WearService extends WearableListenerService {
         }).start();
     }
 
+
     /**
-     * Appellé à la réception d'un message envoyé depuis la montre
+     * Appellé à la réception d'un message envoyé depuis la montre ou de la mainActivity
      *
      * @param messageEvent message reçu
      */
@@ -130,18 +154,10 @@ public class WearService extends WearableListenerService {
     public void onMessageReceived(MessageEvent messageEvent) {
         super.onMessageReceived(messageEvent);
 
-        //Ouvre une connexion vers la montre
-        ConnectionResult connectionResult = mApiClient.blockingConnect(30, TimeUnit.SECONDS);
-
-        if (!connectionResult.isSuccess()) {
-            Log.e(TAG, "Failed to connect to GoogleApiClient.");
-            return;
-        }
 
         //traite le message reçu
         final String path = messageEvent.getPath();
         final byte[] bytes = messageEvent.getData();
-
         String message = null;
         try {
             message = new String(bytes, "UTF-8");
@@ -149,35 +165,50 @@ public class WearService extends WearableListenerService {
             e.printStackTrace();
         }
 
-        if (path.equals("vib")){    //Récéption du message "vib"
-            Handler mHandler = new Handler(getMainLooper());
+        if(path.equals("mainActivity")){
+            System.out.println("Envoi du message :" + message);
 
-            final AudioManager amanager=(AudioManager)getSystemService(Context.AUDIO_SERVICE);
+            sendMessage("todoList", message);
 
-            if (amanager.getRingerMode() == AudioManager.RINGER_MODE_VIBRATE) {
-                amanager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
-            } else if (amanager.getRingerMode() == AudioManager.RINGER_MODE_NORMAL){
-                amanager.setRingerMode(AudioManager.RINGER_MODE_VIBRATE);
-            } else if (amanager.getRingerMode() == AudioManager.RINGER_MODE_SILENT) {
-                amanager.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
+
+        } else { //Si récéption d'un message de la montre
+
+            //Ouvre une connexion vers la montre
+            ConnectionResult connectionResult = mApiClient.blockingConnect(30, TimeUnit.SECONDS);
+
+            if (!connectionResult.isSuccess()) {
+                Log.e(TAG, "Failed to connect to GoogleApiClient.");
+                return;
             }
 
-        } else if(path.equals("getMode")){  //Récéption du message "getMode"
-            Handler mHandler = new Handler(getMainLooper());
-            Log.e("LOG envoi Mobile", "getMode : démarrage");
-            final AudioManager amanager=(AudioManager)getSystemService(Context.AUDIO_SERVICE);
+            if (path.equals("vib")) {    //Récéption du message "vib"
+                Handler mHandler = new Handler(getMainLooper());
 
-            if (amanager.getRingerMode() == AudioManager.RINGER_MODE_VIBRATE) {
-                sendMessage("vib","vibrator");
-            } else if (amanager.getRingerMode() == AudioManager.RINGER_MODE_NORMAL){
-                sendMessage("vib", "ringing");
-            } else {
-                sendMessage("vib","silent");
+                final AudioManager amanager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+
+                if (amanager.getRingerMode() == AudioManager.RINGER_MODE_VIBRATE) {
+                    amanager.setRingerMode(AudioManager.RINGER_MODE_SILENT);
+                } else if (amanager.getRingerMode() == AudioManager.RINGER_MODE_NORMAL) {
+                    amanager.setRingerMode(AudioManager.RINGER_MODE_VIBRATE);
+                } else if (amanager.getRingerMode() == AudioManager.RINGER_MODE_SILENT) {
+                    amanager.setRingerMode(AudioManager.RINGER_MODE_NORMAL);
+                }
+
+            } else if (path.equals("getMode")) {  //Récéption du message "getMode"
+                Handler mHandler = new Handler(getMainLooper());
+                final AudioManager amanager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+
+                if (amanager.getRingerMode() == AudioManager.RINGER_MODE_VIBRATE) {
+                    sendMessage("vib", "vibrator");
+                } else if (amanager.getRingerMode() == AudioManager.RINGER_MODE_NORMAL) {
+                    sendMessage("vib", "ringing");
+                } else {
+                    sendMessage("vib", "silent");
+                }
+
+            } else if (path.equals("lien")) {
+                this.ouvrirLien(new String(bytes, StandardCharsets.UTF_8));
             }
-
-        }
-        else if (path.equals("lien")) {
-            this.ouvrirLien(new String(bytes, StandardCharsets.UTF_8));
         }
     }
 
