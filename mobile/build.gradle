@@ -1,4 +1,3 @@
-import retrofit.http.HEAD
 
 apply plugin: 'com.android.application'
 
